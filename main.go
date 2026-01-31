@@ -24,8 +24,8 @@ type MockeryConfig struct {
 }
 
 type PackageConfig struct {
-	Config     *InterfaceConfig            `yaml:"config,omitempty"`
-	Interfaces map[string]*InterfaceConfig `yaml:"interfaces,omitempty"`
+	Config     *InterfaceConfig           `yaml:"config,omitempty"`
+	Interfaces map[string]InterfaceConfig `yaml:"interfaces,omitempty"`
 }
 
 type InterfaceConfig struct {
@@ -111,25 +111,21 @@ func main() {
 				continue
 			}
 
-			pkg := config.Packages[pkgPath]
-			if pkg.Interfaces == nil {
-				pkg.Interfaces = make(map[string]*InterfaceConfig)
+			if config.Packages[pkgPath].Interfaces == nil {
+				config.Packages[pkgPath] = PackageConfig{Interfaces: make(map[string]InterfaceConfig)}
 			}
 
-			iface, exists := pkg.Interfaces[name]
-			if !exists {
-				iface = &InterfaceConfig{}
-				pkg.Interfaces[name] = iface
-			}
+			iface := config.Packages[pkgPath].Interfaces[name]
+			applyArg(&iface, args, "dir", func(v string) { iface.Dir = v })
+			applyArg(&iface, args, "filename", func(v string) { iface.Filename = v })
+			applyArg(&iface, args, "structname", func(v string) { iface.StructName = v })
 
-			applyArg(iface, args, "dir", func(v string) { iface.Dir = v })
-			applyArg(iface, args, "filename", func(v string) { iface.Filename = v })
-			applyArg(iface, args, "structname", func(v string) { iface.StructName = v })
+			applyBoolArg(&iface, args, "with-expecter", func(v bool) { iface.WithExpecter = &v })
+			applyBoolArg(&iface, args, "inpackage", func(v bool) { iface.Inpackage = &v })
+			applyBoolArg(&iface, args, "testonly", func(v bool) { iface.Testonly = &v })
+			applyBoolArg(&iface, args, "inpackage-suffix", func(v bool) { iface.InpackageSuffix = &v })
 
-			applyBoolArg(iface, args, "with-expecter", func(v bool) { iface.WithExpecter = &v })
-			applyBoolArg(iface, args, "inpackage", func(v bool) { iface.Inpackage = &v })
-			applyBoolArg(iface, args, "testonly", func(v bool) { iface.Testonly = &v })
-			applyBoolArg(iface, args, "inpackage-suffix", func(v bool) { iface.InpackageSuffix = &v })
+			config.Packages[pkgPath].Interfaces[name] = iface
 		}
 		return scanner.Err()
 	})
