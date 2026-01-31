@@ -1,4 +1,4 @@
-module mockery-call-collector
+module github.com/xgamtx/mockery-call-collector
 
 go 1.25
 
